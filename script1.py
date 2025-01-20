@@ -13,7 +13,7 @@ import os
 nest_asyncio.apply()
 
 # URL for the logo image
-LOGO_URL = "http://ob.saleh-kh.lol:2082/download.php?f=BQACAgQAAxkBAAEE4uxniIBRq8FhJnz_G3lxt8k31axKZQACpxkAAsuqQVB1FZV0GOmVGy8E&s=2449394&n=Picsart_25-01-16_09-09-54-162_5783091185375517095.png&m=image%2Fpng&T=MTczNzAxMzM5NA=="
+LOGO_URL = "https://file-to-link-nx-ccf8d5eda5c0.herokuapp.com/dl/678e7aea06473a030935a6d8"
 
 # Path to save the logo
 LOGO_PATH = "downloaded_logo.png"
