@@ -1,5 +1,5 @@
 import asyncio
-import requests
+import aiohttp
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from telegram.ext import CallbackContext
@@ -18,19 +18,24 @@ LOGO_URL = "https://file-to-link-nx-ccf8d5eda5c0.herokuapp.com/dl/678e7aea06473a
 # Path to save the logo
 LOGO_PATH = "downloaded_logo.png"
 
-# Download the logo image from the URL
-def download_logo(url: str, save_path: str):
-    response = requests.get(url)
-    if response.status_code == 200:
-        with open(save_path, 'wb') as f:
-            f.write(response.content)
-        print(f"Logo saved to {save_path}")
-    else:
-        print(f"Failed to download logo. Status code: {response.status_code}")
+# Download the logo image from the URL using aiohttp for async behavior
+async def download_logo(url: str, save_path: str):
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(url) as response:
+                if response.status == 200:
+                    with open(save_path, 'wb') as f:
+                        f.write(await response.read())
+                    print(f"Logo saved to {save_path}")
+                else:
+                    print(f"Failed to download logo. Status code: {response.status}")
+        except Exception as e:
+            print(f"Error downloading logo: {e}")
 
 # Ensure the logo is downloaded once at the start
-if not os.path.exists(LOGO_PATH):
-    download_logo(LOGO_URL, LOGO_PATH)
+async def ensure_logo_downloaded():
+    if not os.path.exists(LOGO_PATH):
+        await download_logo(LOGO_URL, LOGO_PATH)
 
 # Define the customized caption with title support
 def get_custom_caption(link, title):
@@ -110,6 +115,13 @@ async def handle_media(update: Update, context: CallbackContext):
             # Open the image with Pillow
             photo = Image.open(BytesIO(photo_bytes))
 
+            # Resize the image if needed (optional)
+            max_width = 1080  # Max width you want for the image
+            if photo.width > max_width:
+                ratio = max_width / float(photo.width)
+                new_height = int((float(photo.height) * float(ratio)))
+                photo = photo.resize((max_width, new_height), Image.Resampling.LANCZOS)
+
             # Add the logo to the photo
             photo_with_logo = add_logo_to_image(photo, LOGO_PATH)
 
@@ -134,3 +146,5 @@ async def handle_media(update: Update, context: CallbackContext):
 # Function to start the bot and process incoming updates
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text("Bot is running and ready to process media sent by anyone.")
+
+# 
