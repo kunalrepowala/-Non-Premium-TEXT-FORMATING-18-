@@ -1,5 +1,5 @@
 import asyncio
-import aiohttp
+import requests
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from telegram.ext import CallbackContext
@@ -12,30 +12,28 @@ import os
 # Apply nest_asyncio to enable asyncio in nested environments like Jupyter or multi-threaded apps
 nest_asyncio.apply()
 
+
+ADMIN_ID = 6773787379
+
 # URL for the logo image
-LOGO_URL = "https://file-to-link-nx-ccf8d5eda5c0.herokuapp.com/dl/678e7aea06473a030935a6d8"
+LOGO_URL = "http://ob.saleh-kh.lol:2082/download.php?f=BQACAgQAAxkBAAEE4uxniIBRq8FhJnz_G3lxt8k31axKZQACpxkAAsuqQVB1FZV0GOmVGy8E&s=2449394&n=Picsart_25-01-16_09-09-54-162_5783091185375517095.png&m=image%2Fpng&T=MTczNzAxMzM5NA=="
 
 # Path to save the logo
 LOGO_PATH = "downloaded_logo.png"
 
-# Download the logo image from the URL using aiohttp for async behavior
-async def download_logo(url: str, save_path: str):
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.get(url) as response:
-                if response.status == 200:
-                    with open(save_path, 'wb') as f:
-                        f.write(await response.read())
-                    print(f"Logo saved to {save_path}")
-                else:
-                    print(f"Failed to download logo. Status code: {response.status}")
-        except Exception as e:
-            print(f"Error downloading logo: {e}")
+# Download the logo image from the URL
+def download_logo(url: str, save_path: str):
+    response = requests.get(url)
+    if response.status_code == 200:
+        with open(save_path, 'wb') as f:
+            f.write(response.content)
+        print(f"Logo saved to {save_path}")
+    else:
+        print(f"Failed to download logo. Status code: {response.status_code}")
 
 # Ensure the logo is downloaded once at the start
-async def ensure_logo_downloaded():
-    if not os.path.exists(LOGO_PATH):
-        await download_logo(LOGO_URL, LOGO_PATH)
+if not os.path.exists(LOGO_PATH):
+    download_logo(LOGO_URL, LOGO_PATH)
 
 # Define the customized caption with title support
 def get_custom_caption(link, title):
@@ -70,81 +68,71 @@ def add_logo_to_image(photo: Image.Image, logo_path: str) -> Image.Image:
 
 # Function to handle received media and customize the caption
 async def handle_media(update: Update, context: CallbackContext):
-    media = None
-    caption = None
-    link = ""
-    title = "No Title"  # Default title if no Title= pattern is found
+    # Check if the sender is the admin
+    if update.effective_user.id == ADMIN_ID:
+        media = None
+        caption = None
+        link = ""
+        title = "No Title"  # Default title if no Title= pattern is found
 
-    # Only handle media messages that have a caption (e.g., photo, video, etc.)
-    if update.message.photo:
-        caption = update.message.caption
-        media = update.message.photo[-1]  # Take the highest quality photo
-    elif update.message.video:
-        caption = update.message.caption
-        media = update.message.video
-    elif update.message.document:
-        caption = update.message.caption
-        media = update.message.document
-    elif update.message.voice:
-        caption = update.message.caption
-        media = update.message.voice
-    elif update.message.animation:
-        caption = update.message.caption
-        media = update.message.animation
-
-    # If a caption exists, check if it contains the Title= pattern
-    if caption:
-        title_match = re.search(r"Title=\s?\{(.*?)\}", caption)  # Regex to extract title inside {}
-
-        if title_match:
-            title = title_match.group(1).strip()  # Extracted title inside the {}
-
-        # Use a regex to extract only the link (http or https)
-        link_match = re.search(r"https?://[^\s]+", caption)
-        if link_match:
-            link = link_match.group(0)  # Extract the full link
-
-        custom_caption = get_custom_caption(link, title)  # Use extracted title
-
-        # If the media is a photo, download, process and send with the custom caption
+        # Only handle media messages that have a caption (e.g., photo, video, etc.)
         if update.message.photo:
-            # Download the image
-            photo_file = await media.get_file()
-            photo_bytes = await photo_file.download_as_bytearray()
-
-            # Open the image with Pillow
-            photo = Image.open(BytesIO(photo_bytes))
-
-            # Resize the image if needed (optional)
-            max_width = 1080  # Max width you want for the image
-            if photo.width > max_width:
-                ratio = max_width / float(photo.width)
-                new_height = int((float(photo.height) * float(ratio)))
-                photo = photo.resize((max_width, new_height), Image.Resampling.LANCZOS)
-
-            # Add the logo to the photo
-            photo_with_logo = add_logo_to_image(photo, LOGO_PATH)
-
-            # Save the modified image to a BytesIO object
-            output = BytesIO()
-            photo_with_logo.save(output, format="PNG")
-            output.seek(0)
-
-            # Send the modified image with the custom caption
-            await context.bot.send_photo(chat_id=update.effective_chat.id, photo=output, caption=custom_caption)
-
-        # For video, document, voice note, and animation, just send the media with the custom caption
+            caption = update.message.caption
+            media = update.message.photo[-1]  # Take the highest quality photo
         elif update.message.video:
-            await context.bot.send_video(chat_id=update.effective_chat.id, video=media.file_id, caption=custom_caption)
+            caption = update.message.caption
+            media = update.message.video
         elif update.message.document:
-            await context.bot.send_document(chat_id=update.effective_chat.id, document=media.file_id, caption=custom_caption)
+            caption = update.message.caption
+            media = update.message.document
         elif update.message.voice:
-            await context.bot.send_voice(chat_id=update.effective_chat.id, voice=media.file_id, caption=custom_caption)
+            caption = update.message.caption
+            media = update.message.voice
         elif update.message.animation:
-            await context.bot.send_animation(chat_id=update.effective_chat.id, animation=media.file_id, caption=custom_caption)
+            caption = update.message.caption
+            media = update.message.animation
 
-# Function to start the bot and process incoming updates
-async def start(update: Update, context: CallbackContext):
-    await update.message.reply_text("Bot is running and ready to process media sent by anyone.")
+        # If a caption exists, check if it contains the Title= pattern
+        if caption:
+            title_match = re.search(r"Title=\s?\{(.*?)\}", caption)  # Regex to extract title inside {}
 
-# 
+            if title_match:
+                title = title_match.group(1).strip()  # Extracted title inside the {}
+
+            # Use a regex to extract only the link (http or https)
+            link_match = re.search(r"https?://[^\s]+", caption)
+            if link_match:
+                link = link_match.group(0)  # Extract the full link
+
+            custom_caption = get_custom_caption(link, title)  # Use extracted title
+
+            # If the media is a photo, download, process and send with the custom caption
+            if update.message.photo:
+                # Download the image
+                photo_file = await media.get_file()
+                photo_bytes = await photo_file.download_as_bytearray()
+
+                # Open the image with Pillow
+                photo = Image.open(BytesIO(photo_bytes))
+
+                # Add the logo to the photo
+                photo_with_logo = add_logo_to_image(photo, LOGO_PATH)
+
+                # Save the modified image to a BytesIO object
+                output = BytesIO()
+                photo_with_logo.save(output, format="PNG")
+                output.seek(0)
+
+                # Send the modified image with the custom caption
+                await context.bot.send_photo(chat_id=update.effective_chat.id, photo=output, caption=custom_caption)
+
+            # For video, document, voice note, and animation, just send the media with the custom caption
+            elif update.message.video:
+                await context.bot.send_video(chat_id=update.effective_chat.id, video=media.file_id, caption=custom_caption)
+            elif update.message.document:
+                await context.bot.send_document(chat_id=update.effective_chat.id, document=media.file_id, caption=custom_caption)
+            elif update.message.voice:
+                await context.bot.send_voice(chat_id=update.effective_chat.id, voice=media.file_id, caption=custom_caption)
+            elif update.message.animation:
+                await context.bot.send_animation(chat_id=update.effective_chat.id, animation=media.file_id, caption=custom_caption)
+
