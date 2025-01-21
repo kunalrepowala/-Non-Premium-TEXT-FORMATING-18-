@@ -10,7 +10,9 @@ import re
 import os
 
 # Apply nest_asyncio to enable asyncio in nested environments like Jupyter or multi-threaded apps
-nest_asyncio.apply() 
+nest_asyncio.apply()
+
+# Bot To
 
 # URL for the logo image
 LOGO_URL = "http://ob.saleh-kh.lol:2082/download.php?f=BQACAgQAAxkBAAEE4uxniIBRq8FhJnz_G3lxt8k31axKZQACpxkAAsuqQVB1FZV0GOmVGy8E&s=2449394&n=Picsart_25-01-16_09-09-54-162_5783091185375517095.png&m=image%2Fpng&T=MTczNzAxMzM5NA=="
@@ -22,7 +24,9 @@ LOGO_PATH = "downloaded_logo.png"
 def download_logo(url: str, save_path: str):
     response = requests.get(url)
     print(f"Response headers: {response.headers}")
-    if response.status_code == 200 and "image" in response.headers["Content-Type"]:
+    
+    # Check if the response is an image
+    if response.status_code == 200 and "image" in response.headers.get("Content-Type", ""):
         try:
             # Verify if the content is a valid image
             image = Image.open(BytesIO(response.content))
@@ -32,12 +36,24 @@ def download_logo(url: str, save_path: str):
             print(f"Logo saved to {save_path}")
         except Exception as e:
             print(f"Error verifying image: {e}")
+            return False  # Return False if the image is invalid
     else:
         print(f"Failed to download logo. Status code: {response.status_code}")
+        print(f"Received content type: {response.headers.get('Content-Type')}")
+        # Optionally, save the response content to a file to inspect
+        with open("response_content.html", "wb") as f:
+            f.write(response.content)
+        print("Response content saved as 'response_content.html' for inspection.")
+        return False  # Return False if download is unsuccessful
+
+    return True  # Return True if download and verification succeed
 
 # Ensure the logo is downloaded once at the start
 if not os.path.exists(LOGO_PATH):
-    download_logo(LOGO_URL, LOGO_PATH)
+    logo_downloaded = download_logo(LOGO_URL, LOGO_PATH)
+    if not logo_downloaded:
+        print("Logo download failed. Exiting.")
+        exit(1)  # Exit if the logo couldn't be downloaded
 
 # Define the customized caption with title support
 def get_custom_caption(links, title):
@@ -68,6 +84,7 @@ https://t.me/HotError
 
 # Function to add logo to image
 def add_logo_to_image(photo: Image.Image, logo_path: str) -> Image.Image:
+    # Open the logo image
     logo = Image.open(logo_path).convert("RGBA")  # Ensure the logo is in RGBA format for transparency
 
     # Resize logo if necessary (optional, adjust as needed)
@@ -78,7 +95,7 @@ def add_logo_to_image(photo: Image.Image, logo_path: str) -> Image.Image:
     # Position the logo at the top center of the photo
     position = ((photo.width - logo.width) // 2, 0)
 
-    # Paste the logo on the photo (use mask to preserve transparency)
+    # Paste the logo on the photo
     photo.paste(logo, position, logo)
     return photo
 
@@ -151,5 +168,3 @@ async def handle_media(update: Update, context: CallbackContext):
 # Function to start the bot and process incoming updates
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text("Bot is running and ready to process media sent by anyone.")
-
-# Function to start the bot and process incoming updates
