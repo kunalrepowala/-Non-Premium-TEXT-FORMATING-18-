@@ -10,10 +10,7 @@ import re
 import os
 
 # Apply nest_asyncio to enable asyncio in nested environments like Jupyter or multi-threaded apps
-nest_asyncio.apply()
-
-# Bot Token
-BOT_TOKEN = "8031663240:AAFBLk9xBIrceFT4zTtKHSWeJ8iYq5cOdyA"
+nest_asyncio.apply() 
 
 # URL for the logo image
 LOGO_URL = "http://ob.saleh-kh.lol:2082/download.php?f=BQACAgQAAxkBAAEE4uxniIBRq8FhJnz_G3lxt8k31axKZQACpxkAAsuqQVB1FZV0GOmVGy8E&s=2449394&n=Picsart_25-01-16_09-09-54-162_5783091185375517095.png&m=image%2Fpng&T=MTczNzAxMzM5NA=="
@@ -24,10 +21,17 @@ LOGO_PATH = "downloaded_logo.png"
 # Download the logo image from the URL
 def download_logo(url: str, save_path: str):
     response = requests.get(url)
-    if response.status_code == 200:
-        with open(save_path, 'wb') as f:
-            f.write(response.content)
-        print(f"Logo saved to {save_path}")
+    print(f"Response headers: {response.headers}")
+    if response.status_code == 200 and "image" in response.headers["Content-Type"]:
+        try:
+            # Verify if the content is a valid image
+            image = Image.open(BytesIO(response.content))
+            image.verify()  # Verifies that it is a valid image
+            with open(save_path, 'wb') as f:
+                f.write(response.content)
+            print(f"Logo saved to {save_path}")
+        except Exception as e:
+            print(f"Error verifying image: {e}")
     else:
         print(f"Failed to download logo. Status code: {response.status_code}")
 
@@ -64,8 +68,7 @@ https://t.me/HotError
 
 # Function to add logo to image
 def add_logo_to_image(photo: Image.Image, logo_path: str) -> Image.Image:
-    # Open the logo image
-    logo = Image.open(logo_path)
+    logo = Image.open(logo_path).convert("RGBA")  # Ensure the logo is in RGBA format for transparency
 
     # Resize logo if necessary (optional, adjust as needed)
     logo_width = photo.width // 3  # Resize logo to 1/3rd of the image width
@@ -75,8 +78,8 @@ def add_logo_to_image(photo: Image.Image, logo_path: str) -> Image.Image:
     # Position the logo at the top center of the photo
     position = ((photo.width - logo.width) // 2, 0)
 
-    # Paste the logo on the photo
-    photo.paste(logo, position, logo.convert("RGBA"))
+    # Paste the logo on the photo (use mask to preserve transparency)
+    photo.paste(logo, position, logo)
     return photo
 
 # Function to handle received media and customize the caption
@@ -148,3 +151,5 @@ async def handle_media(update: Update, context: CallbackContext):
 # Function to start the bot and process incoming updates
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text("Bot is running and ready to process media sent by anyone.")
+
+# Function to start the bot and process incoming updates
