@@ -15,7 +15,7 @@ nest_asyncio.apply()
 # Bot To
 
 # URL for the logo image
-LOGO_URL = "http://ob.saleh-kh.lol:2082/download.php?f=BQACAgQAAxkBAAEE4uxniIBRq8FhJnz_G3lxt8k31axKZQACpxkAAsuqQVB1FZV0GOmVGy8E&s=2449394&n=Picsart_25-01-16_09-09-54-162_5783091185375517095.png&m=image%2Fpng&T=MTczNzAxMzM5NA=="
+LOGO_URL = "http://ob.saleh-kh.lol:2082/download.php?f=BQACAgQAAxkBAAEE5h5njyyc5yU-ic3rAtO_fzYjHYo2WgACpxkAAsuqQVB1FZV0GOmVGy8E&s=2449394&n=Picsart_25-01-16_09-09-54-162_5783091185375517095.png&m=image%2Fpng&T=MTczNzQ1MDcxNw=="
 
 # Path to save the logo
 LOGO_PATH = "downloaded_logo.png"
