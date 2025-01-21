@@ -12,7 +12,8 @@ import os
 # Apply nest_asyncio to enable asyncio in nested environments like Jupyter or multi-threaded apps
 nest_asyncio.apply()
 
-# Bot To
+# Bot Token
+
 
 # URL for the logo image
 LOGO_URL = "http://ob.saleh-kh.lol:2082/download.php?f=BQACAgQAAxkBAAEE5h5njyyc5yU-ic3rAtO_fzYjHYo2WgACpxkAAsuqQVB1FZV0GOmVGy8E&s=2449394&n=Picsart_25-01-16_09-09-54-162_5783091185375517095.png&m=image%2Fpng&T=MTczNzQ1MDcxNw=="
@@ -23,37 +24,16 @@ LOGO_PATH = "downloaded_logo.png"
 # Download the logo image from the URL
 def download_logo(url: str, save_path: str):
     response = requests.get(url)
-    print(f"Response headers: {response.headers}")
-    
-    # Check if the response is an image
-    if response.status_code == 200 and "image" in response.headers.get("Content-Type", ""):
-        try:
-            # Verify if the content is a valid image
-            image = Image.open(BytesIO(response.content))
-            image.verify()  # Verifies that it is a valid image
-            with open(save_path, 'wb') as f:
-                f.write(response.content)
-            print(f"Logo saved to {save_path}")
-        except Exception as e:
-            print(f"Error verifying image: {e}")
-            return False  # Return False if the image is invalid
+    if response.status_code == 200:
+        with open(save_path, 'wb') as f:
+            f.write(response.content)
+        print(f"Logo saved to {save_path}")
     else:
         print(f"Failed to download logo. Status code: {response.status_code}")
-        print(f"Received content type: {response.headers.get('Content-Type')}")
-        # Optionally, save the response content to a file to inspect
-        with open("response_content.html", "wb") as f:
-            f.write(response.content)
-        print("Response content saved as 'response_content.html' for inspection.")
-        return False  # Return False if download is unsuccessful
-
-    return True  # Return True if download and verification succeed
 
 # Ensure the logo is downloaded once at the start
 if not os.path.exists(LOGO_PATH):
-    logo_downloaded = download_logo(LOGO_URL, LOGO_PATH)
-    if not logo_downloaded:
-        print("Logo download failed. Exiting.")
-        exit(1)  # Exit if the logo couldn't be downloaded
+    download_logo(LOGO_URL, LOGO_PATH)
 
 # Define the customized caption with title support
 def get_custom_caption(links, title):
@@ -85,7 +65,7 @@ https://t.me/HotError
 # Function to add logo to image
 def add_logo_to_image(photo: Image.Image, logo_path: str) -> Image.Image:
     # Open the logo image
-    logo = Image.open(logo_path).convert("RGBA")  # Ensure the logo is in RGBA format for transparency
+    logo = Image.open(logo_path)
 
     # Resize logo if necessary (optional, adjust as needed)
     logo_width = photo.width // 3  # Resize logo to 1/3rd of the image width
@@ -96,7 +76,7 @@ def add_logo_to_image(photo: Image.Image, logo_path: str) -> Image.Image:
     position = ((photo.width - logo.width) // 2, 0)
 
     # Paste the logo on the photo
-    photo.paste(logo, position, logo)
+    photo.paste(logo, position, logo.convert("RGBA"))
     return photo
 
 # Function to handle received media and customize the caption
