@@ -5,57 +5,56 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from telegram.ext import CallbackContext
 from PIL import Image
 from io import BytesIO
-import nest_asyncio
 import re
 import os
 
 # Apply nest_asyncio to enable asyncio in nested environments like Jupyter or multi-threaded apps
-nest_asyncio.apply()
 
 # Bot Token
 
 
 # URL for the logo image
-LOGO_URL = "http://ob.saleh-kh.lol:2082/download.php?f=BQACAgQAAxkBAAEE5h5njyyc5yU-ic3rAtO_fzYjHYo2WgACpxkAAsuqQVB1FZV0GOmVGy8E&s=2449394&n=Picsart_25-01-16_09-09-54-162_5783091185375517095.png&m=image%2Fpng&T=MTczNzQ1MDcxNw=="
+LOGO_URL = "http://ob.saleh-kh.lol:2082/download.php?f=BQACAgQAAxkBAAEE7oJnkzKfdBkgz5m5ahAckCMwe7m0dAACvRQAArYqmVCHGFKOwTqD9i8E&s=2275515&n=Picsart_25-01-23_19-51-50-875_5807720155643385021.png&m=image%2Fpng&T=MTczNzcxNDQwMA=="
 
 # Path to save the logo
-LOGO_PATH = "downloaded_logo.png"
+LOGO_PATH = "downloaded_logo_resized.png"
 
-# Download the logo image from the URL
-def download_logo(url: str, save_path: str):
+# Download and resize the logo image only once
+def download_and_resize_logo(url: str, save_path: str):
     response = requests.get(url)
     if response.status_code == 200:
-        with open(save_path, 'wb') as f:
-            f.write(response.content)
-        print(f"Logo saved to {save_path}")
+        # Open the logo image
+        logo = Image.open(BytesIO(response.content))
+
+        # Resize the logo to the desired width (1/3 of the image width)
+        logo_width = 150  # Adjust the width according to your needs
+        logo_height = int((logo_width / logo.width) * logo.height)
+        logo = logo.resize((logo_width, logo_height), Image.Resampling.LANCZOS)
+
+        # Save the resized logo
+        logo.save(save_path)
+        print(f"Logo downloaded and resized, saved to {save_path}")
     else:
         print(f"Failed to download logo. Status code: {response.status_code}")
 
-# Ensure the logo is downloaded once at the start
+# Ensure the logo is downloaded and resized once at the start
 if not os.path.exists(LOGO_PATH):
-    download_logo(LOGO_URL, LOGO_PATH)
+    download_and_resize_logo(LOGO_URL, LOGO_PATH)
 
 # Define the customized caption with title support
 def get_custom_caption(links, title):
-    # Start caption with basic information
     caption = f"""
-🎃 ᴘᴏᴡᴇʀᴇᴅ ʙʏ↓ Telegram                
+🎃 ᴘᴏᴡᴇʀᴇʀᴇᴅ ʙʏ↓ Telegram                
                 🍯 @HotError      
 
 Title - {title}
 ⌬ Hot Error
 """
-
-    # If only one link, display as a single link
     if len(links) == 1:
         caption += f"╰─➩ {links[0]} \n"
-
-    # If multiple links, format them with part numbers
     elif len(links) > 1:
         for idx, link in enumerate(links, 1):
             caption += f"(Part {idx})─➩ {link} \n\n"
-
-    # Append other categories
     caption += """
 Other Categories ↓ 🥵⚡
 https://t.me/HotError
@@ -64,13 +63,7 @@ https://t.me/HotError
 
 # Function to add logo to image
 def add_logo_to_image(photo: Image.Image, logo_path: str) -> Image.Image:
-    # Open the logo image
     logo = Image.open(logo_path)
-
-    # Resize logo if necessary (optional, adjust as needed)
-    logo_width = photo.width // 3  # Resize logo to 1/3rd of the image width
-    logo_height = int((logo_width / logo.width) * logo.height)
-    logo = logo.resize((logo_width, logo_height), Image.Resampling.LANCZOS)
 
     # Position the logo at the top center of the photo
     position = ((photo.width - logo.width) // 2, 0)
