@@ -19,7 +19,8 @@ async def run_bot() -> None:
     
     app = ApplicationBuilder().token(bot_token).build()  # Initialize the bot application using the token
 
-        app.add_handler(CommandHandler("start", start))  # Command handler for '/start'
+    # Remove extra indentation here:
+    app.add_handler(CommandHandler("start", start))  # Command handler for '/start'
 
     # Add message handlers for different types of media
     app.add_handler(MessageHandler(filters.PHOTO, handle_media))   # Handle photo messages
