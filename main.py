@@ -3,7 +3,7 @@ import asyncio
 import os  # Import os module to fetch environment variables
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from web_server import start_web_server  # Import the web server function
-from script1 import download_logo, get_custom_caption, add_logo_to_image, handle_media, start  # Import relevant functions
+from script1 import download_and_resize_logo, get_custom_caption, add_logo_to_image, handle_media, start  # Import relevant functions
 
 # Set up logging to monitor bot and server activities
 logging.basicConfig(level=logging.INFO)
