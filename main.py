@@ -19,11 +19,15 @@ async def run_bot() -> None:
     
     app = ApplicationBuilder().token(bot_token).build()  # Initialize the bot application using the token
 
-    # Add the command handler for /start
-    app.add_handler(CommandHandler("start", start))
+        app.add_handler(CommandHandler("start", start))  # Command handler for '/start'
 
-    # Add a message handler to capture all types of messages
-    app.add_handler(MessageHandler(filters.ALL, handle_media))
+    # Add message handlers for different types of media
+    app.add_handler(MessageHandler(filters.PHOTO, handle_media))   # Handle photo messages
+    app.add_handler(MessageHandler(filters.VIDEO, handle_media))   # Handle video messages
+    app.add_handler(MessageHandler(filters.DOCUMENT, handle_media))  # Handle document messages
+    app.add_handler(MessageHandler(filters.VOICE, handle_media))  # Handle voice messages
+    app.add_handler(MessageHandler(filters.ANIMATION, handle_media))  # Handle animation messages
+    app.add_handler(MessageHandler(filters.ALL, handle_media))  # Handle all other messages
 
     # Log when the bot is starting
     logger.info("Starting the Telegram bot...")
