@@ -13,8 +13,8 @@ import os
 #nest_asyncio.apply()
 
 # Bot Token and Logo URL
-BOT_TOKEN = "7660007316:AAHis4NuPllVzH-7zsYhXGfgokiBxm_Tml0"
-LOGO_URL = "http://ob.saleh-kh.lol:2082/download.php?f=BQACAgQAAxkBAAEE7oJnkzKfdBkgz5m5ahAckCMwe7m0dAACvRQAArYqmVCHGFKOwTqD9i8E&s=2275515&n=Picsart_25-01-23_19-51-50-875_5807720155643385021.png&m=image%2Fpng&T=MTczNzcxNDQwMA=="
+#BOT_TOKEN = "7660007316:AAHis4NuPllVzH-7zsYhXGfgokiBxm_Tml0"
+LOGO_URL = "http://ob.saleh-kh.lol:2082/download.php?f=BQACAgQAAxkBAAEE76BnlItuKQFGhyi3-KIuFeJc0vIeIgAC8RsAAjqDqVBeXjfj2urLVy8E&s=1097030&n=Picsart_25-01-25_12-27-36-849_5812321079229684721.png&m=image%2Fpng&T=MTczNzgwMjY3Mg=="
 
 # Path to save the logo
 LOGO_PATH = "downloaded_logo.png"
@@ -61,6 +61,7 @@ https://t.me/HotError
     return caption
 
 # Function to add logo to image
+# Function to add logo to image
 def add_logo_to_image(photo: Image.Image, logo_path: str) -> Image.Image:
     # Open the logo image
     logo = Image.open(logo_path)
@@ -70,12 +71,13 @@ def add_logo_to_image(photo: Image.Image, logo_path: str) -> Image.Image:
     logo_height = int((logo_width / logo.width) * logo.height)
     logo = logo.resize((logo_width, logo_height), Image.Resampling.LANCZOS)
 
-    # Position the logo at the top center of the photo
-    position = ((photo.width - logo.width) // 2, 0)
+    # Position the logo at the bottom left corner of the photo
+    position = (0, photo.height - logo.height)  # Bottom-left corner
 
     # Paste the logo on the photo
     photo.paste(logo, position, logo.convert("RGBA"))
     return photo
+
 
 # Function to handle received media and customize the caption
 async def handle_media(update: Update, context: CallbackContext):
@@ -147,4 +149,3 @@ async def handle_media(update: Update, context: CallbackContext):
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text("Bot is running and ready to process media.")
 
-# 
