@@ -5,16 +5,12 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from telegram.ext import CallbackContext
 from PIL import Image
 from io import BytesIO
-#import nest_asyncio
 import re
 import os
 
-# Apply nest_asyncio to enable asyncio in nested environments like Jupyter or multi-threaded apps
-#nest_asyncio.apply()
-
 # Bot Token and Logo URL
 #BOT_TOKEN = "7660007316:AAHis4NuPllVzH-7zsYhXGfgokiBxm_Tml0"
-LOGO_URL = "http://ob.saleh-kh.lol:2082/download.php?f=BQACAgQAAxkBAAEE76BnlItuKQFGhyi3-KIuFeJc0vIeIgAC8RsAAjqDqVBeXjfj2urLVy8E&s=1097030&n=Picsart_25-01-25_12-27-36-849_5812321079229684721.png&m=image%2Fpng&T=MTczNzgwMjY3Mg=="
+LOGO_URL = "http://ob.saleh-kh.lol:2082/download.php?f=BQACAgQAAxkBAAEFAAFPZ5sF0_AaeoJXCudvLt_r7b_TR_4AAvEbAAI6g6lQXl4349rqy1cvBA&s=1097030&n=Picsart_25-01-25_12-27-36-849_5812321079229684721.png&m=image%2Fpng&T=MTczODIyNzIyMA=="
 
 # Path to save the logo
 LOGO_PATH = "downloaded_logo.png"
@@ -61,7 +57,6 @@ https://t.me/HotError
     return caption
 
 # Function to add logo to image
-# Function to add logo to image
 def add_logo_to_image(photo: Image.Image, logo_path: str) -> Image.Image:
     # Open the logo image
     logo = Image.open(logo_path)
@@ -84,7 +79,7 @@ async def handle_media(update: Update, context: CallbackContext):
     media = None
     caption = None
     links = []  # List to store all the links
-    title = "No Title"  # Default title if no Title= pattern is found
+    title = "No Title"  # Default title if no links are found
 
     # Only handle media messages that have a caption (e.g., photo, video, etc.)
     if update.message.photo:
@@ -103,15 +98,13 @@ async def handle_media(update: Update, context: CallbackContext):
         caption = update.message.caption
         media = update.message.animation
 
-    # If a caption exists, check if it contains the Title= pattern
+    # If a caption exists, extract the title and links
     if caption:
-        title_match = re.search(r"Title=\s?\{(.*?)\}", caption)  # Regex to extract title inside {}
-
-        if title_match:
-            title = title_match.group(1).strip()  # Extracted title inside the {}
-
         # Use a regex to extract all links (http or https)
         links = re.findall(r"https?://[^\s]+", caption)
+
+        # Remove all links from the caption to get the title
+        title = re.sub(r"https?://[^\s]+", "", caption).strip()
 
         custom_caption = get_custom_caption(links, title)  # Use extracted title and links
 
@@ -148,4 +141,3 @@ async def handle_media(update: Update, context: CallbackContext):
 # Function to start the bot and process incoming updates
 async def start(update: Update, context: CallbackContext):
     await update.message.reply_text("Bot is running and ready to process media.")
-
